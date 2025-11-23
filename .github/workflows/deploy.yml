@@ -37,6 +37,15 @@ jobs:
           echo "Verifying package.json scripts:"
           cat package.json | grep -A 10 scripts
 
+      - name: Create .env file for build
+        working-directory: ./my-portfolio
+        run: |
+          echo "Creating .env file with EmailJS credentials"
+          echo "VITE_EMAILJS_SERVICE_ID=${{ secrets.EMAILJS_SERVICE_ID }}" >> .env
+          echo "VITE_EMAILJS_TEMPLATE_ID=${{ secrets.EMAILJS_TEMPLATE_ID }}" >> .env
+          echo "VITE_EMAILJS_PUBLIC_KEY=${{ secrets.EMAILJS_PUBLIC_KEY }}" >> .env
+          echo ".env file created (values hidden for security)"
+
       - name: Build
         working-directory: ./my-portfolio
         run: |
