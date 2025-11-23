@@ -1,13 +1,19 @@
-# Build and deploy Vite + React app to GitHub Pages (gh-pages branch)
 name: Build and deploy Vite site to GitHub Pages
+
 on:
   push:
     branches:
-      - main    # change to 'master' if your default branch is master
-  workflow_dispatch: # allows manual runs from Actions UI
+      - main
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
@@ -20,23 +26,26 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: my-portfolio/package-lock.json
 
       - name: Install dependencies
+        working-directory: ./my-portfolio
         run: npm ci
 
       - name: Build
+        working-directory: ./my-portfolio
         run: npm run build
 
-      - name: Add SPA fallback (copy index.html to 404.html)
-        run: |
-          if [ -f dist/index.html ]; then
-            cp -f dist/index.html dist/404.html
-          fi
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
 
-      - name: Deploy to gh-pages
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          branch: gh-pages        # branch to deploy to
-          folder: dist            # folder with the built site
-          clean: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          path: my-portfolio/dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
