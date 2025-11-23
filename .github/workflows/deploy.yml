@@ -26,56 +26,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-
-      - name: Determine project directory
-        id: project_dir
-        run: |
-          echo "Current directory:"
-          pwd
-          echo "Directory contents:"
-          ls -la
-          # Check my-portfolio subdirectory first (most common case)
-          if [ -d "my-portfolio" ] && [ -f "my-portfolio/package.json" ]; then
-            echo "dir=my-portfolio" >> $GITHUB_OUTPUT
-            echo "dist_path=my-portfolio/dist" >> $GITHUB_OUTPUT
-            echo "Project is in my-portfolio subdirectory"
-            echo "package.json contents:"
-            cat my-portfolio/package.json | grep -A 10 scripts
-          # Check if root package.json has a build script
-          elif [ -f "package.json" ] && grep -q '"build"' package.json; then
-            echo "dir=." >> $GITHUB_OUTPUT
-            echo "dist_path=./dist" >> $GITHUB_OUTPUT
-            echo "Project is at root (has build script)"
-            echo "package.json contents:"
-            cat package.json | grep -A 10 scripts
-          else
-            echo "ERROR: Could not find package.json with build script"
-            echo "Root package.json (if exists):"
-            if [ -f "package.json" ]; then
-              cat package.json
-            fi
-            ls -la
-            exit 1
-          fi
+          cache: 'npm'
 
       - name: Install dependencies
-        working-directory: ${{ steps.project_dir.outputs.dir }}
-        run: |
-          echo "Installing in: ${{ steps.project_dir.outputs.dir }}"
-          pwd
-          ls -la
-          npm ci
-          echo "Verifying package.json after install:"
-          cat package.json | grep -A 10 scripts
-          echo "Available scripts:"
-          npm run
+        run: npm ci
 
       - name: Build
-        working-directory: ${{ steps.project_dir.outputs.dir }}
-        run: |
-          echo "Building in: ${{ steps.project_dir.outputs.dir }}"
-          pwd
-          npm run build
+        run: npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -83,7 +40,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ${{ steps.project_dir.outputs.dist_path }}
+          path: ./dist
 
       - name: Deploy to GitHub Pages
         id: deployment
