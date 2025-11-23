@@ -23,14 +23,28 @@ import {
   X,
   BarChart,
   Clock,
-  Target
+  Target,
+  Loader2,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react'
+import emailjs from '@emailjs/browser'
 import profileImage from './assets/profile.jpg'
 
 function App() {
   const [activeSection, setActiveSection] = useState('home');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  
+  // Contact form state
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null); // 'success', 'error', or null
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Handle scroll effect for navbar
   useEffect(() => {
@@ -62,6 +76,104 @@ function App() {
       element.scrollIntoView({ behavior: 'smooth' });
       setActiveSection(id);
       setIsMenuOpen(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    // Clear status when user starts typing
+    if (submitStatus) {
+      setSubmitStatus(null);
+      setErrorMessage('');
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus(null);
+
+    try {
+      // EmailJS Configuration
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID || "YOUR_SERVICE_ID";
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || "YOUR_TEMPLATE_ID";
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || "YOUR_PUBLIC_KEY";
+
+      // Debug: Log the values (first few characters only for security)
+      console.log('EmailJS Config Check:', {
+        serviceId: serviceId ? `${serviceId.substring(0, 10)}...` : 'MISSING',
+        templateId: templateId ? `${templateId.substring(0, 10)}...` : 'MISSING',
+        publicKey: publicKey ? `${publicKey.substring(0, 10)}...` : 'MISSING',
+        hasServiceId: !!import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        hasTemplateId: !!import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        hasPublicKey: !!import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+      });
+
+      // Validate that credentials are set
+      if (serviceId === "YOUR_SERVICE_ID" || templateId === "YOUR_TEMPLATE_ID" || publicKey === "YOUR_PUBLIC_KEY") {
+        throw new Error("EmailJS credentials not configured. Please set up your .env file in the my-portfolio directory with your EmailJS credentials. Make sure to restart the dev server after creating/updating the .env file. See EMAILJS_SETUP.md for instructions.");
+      }
+
+      // Additional validation - check if values are empty strings
+      if (!serviceId || !templateId || !publicKey || serviceId.trim() === '' || templateId.trim() === '' || publicKey.trim() === '') {
+        throw new Error("EmailJS credentials are empty. Please check your .env file and make sure all three values are set correctly.");
+      }
+
+      const templateParams = {
+        from_name: formData.name,
+        from_email: formData.email,
+        message: formData.message,
+        to_email: socialLinks.email,
+      };
+
+      const response = await emailjs.send(serviceId, templateId, templateParams, publicKey);
+      
+      console.log('EmailJS success:', response);
+      setSubmitStatus('success');
+      setFormData({ name: '', email: '', message: '' });
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setSubmitStatus(null);
+      }, 5000);
+    } catch (error) {
+      console.error('EmailJS error details:', {
+        error,
+        text: error.text,
+        status: error.status,
+        message: error.message
+      });
+      
+      // Provide more helpful error messages
+      let errorMsg = "Failed to send message. Please try again or email me directly.";
+      
+      if (error.text) {
+        errorMsg = `Error: ${error.text}`;
+      } else if (error.message) {
+        errorMsg = `Error: ${error.message}`;
+      } else if (error.status === 400) {
+        errorMsg = "Invalid EmailJS configuration. Please check your Service ID, Template ID, and Public Key in your .env file.";
+      } else if (error.status === 401) {
+        errorMsg = "Unauthorized. Please check your EmailJS Public Key.";
+      } else if (error.status === 404) {
+        errorMsg = "Service or Template not found. Please check your Service ID and Template ID.";
+      }
+      
+      // Store error message in state for display
+      setErrorMessage(errorMsg);
+      setSubmitStatus('error');
+      console.error('Full error:', error);
+      
+      // Clear error message after 8 seconds (longer for user to read)
+      setTimeout(() => {
+        setSubmitStatus(null);
+      }, 8000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -385,7 +497,7 @@ function App() {
             <div className="contact-details">
               <div className="contact-item">
                 <Mail size={20} className="contact-icon" />
-                <a href={socialLinks.email}>cyrilsanantonio19</a>
+                <a href={socialLinks.email}>cyrilsanantonio19@gmail.com</a>
               </div>
               <div className="contact-item">
                 <Phone size={20} className="contact-icon" />
@@ -397,19 +509,68 @@ function App() {
               </div>
             </div>
           </div>
-          <form className="contact-form">
+          <form className="contact-form" onSubmit={handleSubmit}>
+            {submitStatus === 'success' && (
+              <div className="form-message success">
+                <CheckCircle2 size={20} />
+                <span>Message sent successfully! I'll get back to you soon.</span>
+              </div>
+            )}
+            {submitStatus === 'error' && (
+              <div className="form-message error">
+                <AlertCircle size={20} />
+                <span>{errorMessage || "Failed to send message. Please try again or email me directly."}</span>
+              </div>
+            )}
             <div className="form-group">
-              <input type="text" placeholder="Your Name" required />
+              <input 
+                type="text" 
+                name="name"
+                placeholder="Your Name" 
+                value={formData.name}
+                onChange={handleInputChange}
+                required 
+                disabled={isSubmitting}
+              />
             </div>
             <div className="form-group">
-              <input type="email" placeholder="Your Email" required />
+              <input 
+                type="email" 
+                name="email"
+                placeholder="Your Email" 
+                value={formData.email}
+                onChange={handleInputChange}
+                required 
+                disabled={isSubmitting}
+              />
             </div>
             <div className="form-group">
-              <textarea placeholder="Your Message" rows="5" required></textarea>
+              <textarea 
+                name="message"
+                placeholder="Your Message" 
+                rows="5" 
+                value={formData.message}
+                onChange={handleInputChange}
+                required 
+                disabled={isSubmitting}
+              ></textarea>
             </div>
-            <button type="submit" className="btn primary full-width">
-              <Send size={20} />
-              Send Message
+            <button 
+              type="submit" 
+              className="btn primary full-width" 
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={20} className="spinning" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send size={20} />
+                  Send Message
+                </>
+              )}
             </button>
           </form>
         </div>
