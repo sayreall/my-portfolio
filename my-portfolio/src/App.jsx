@@ -30,6 +30,7 @@ import {
 } from 'lucide-react'
 import emailjs from '@emailjs/browser'
 import profileImage from './assets/profile.jpg'
+import rorImage from './assets/ror.png'
 
 function App() {
   const [activeSection, setActiveSection] = useState('home');
@@ -182,16 +183,16 @@ function App() {
       id: 1,
       title: 'E-Commerce Leantech',
       description: 'Full-stack e-commerce platform for electronics with user-friendly interface and secure payment integration.',
-      tags: ['HTML5', 'CSS3', 'Python', 'Flask', 'MySQL'],
+      tags: ['HTML5', 'CSS3', 'Python', 'Flask', 'JavaScript', 'MySQL'],
       github: 'https://github.com/sayreall/leantech-shop',
       demo: 'https://drive.google.com/drive/folders/1wjCwC2FQjz2o52XSFsDMK8sMWDHJgzXH',
-      image: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      image: `url(${rorImage})`
     },
     {
       id: 2,
       title: 'E-Commerce Leantech Mobile App',
       description: 'Mobile application for the Leantech e-commerce platform with seamless shopping experience.',
-      tags: ['Php', 'Flutter', 'MySQL'],
+      tags: ['Php', 'Flutter', 'MySQL', 'Dart'],
       github: 'https://github.com/sayreall/leantech-shop-mobile',
       demo: 'https://drive.google.com/drive/folders/1wjCwC2FQjz2o52XSFsDMK8sMWDHJgzXH',
       image: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
@@ -431,7 +432,7 @@ function App() {
             <div key={project.id} className="project-card">
               <div 
                 className="project-image" 
-                style={{ background: project.image }}
+                style={{ backgroundImage: project.image }}
               >
                 <div className="project-overlay">
                   <a href={project.github} className="project-link">
