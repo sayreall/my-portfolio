@@ -27,12 +27,26 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Determine project directory
+        id: project_dir
+        run: |
+          if [ -f "package.json" ]; then
+            echo "dir=." >> $GITHUB_OUTPUT
+            echo "Project is at root"
+          elif [ -d "my-portfolio" ] && [ -f "my-portfolio/package.json" ]; then
+            echo "dir=my-portfolio" >> $GITHUB_OUTPUT
+            echo "Project is in my-portfolio subdirectory"
+          else
+            echo "ERROR: Could not find package.json"
+            exit 1
+          fi
+
       - name: Install dependencies
-        working-directory: ./my-portfolio
+        working-directory: ${{ steps.project_dir.outputs.dir }}
         run: npm ci
 
       - name: Build
-        working-directory: ./my-portfolio
+        working-directory: ${{ steps.project_dir.outputs.dir }}
         run: npm run build
 
       - name: Setup Pages
@@ -41,7 +55,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: my-portfolio/dist
+          path: ${{ steps.project_dir.outputs.dir }}/dist
 
       - name: Deploy to GitHub Pages
         id: deployment
