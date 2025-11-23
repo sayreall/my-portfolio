@@ -21,23 +21,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-
-      - name: List directory structure
-        run: |
-          ls -la
-          if [ -d "my-portfolio" ]; then
-            echo "my-portfolio directory exists"
-            ls -la my-portfolio/
-          else
-            echo "my-portfolio directory NOT found"
-          fi
 
       - name: Install dependencies
         working-directory: ./my-portfolio
