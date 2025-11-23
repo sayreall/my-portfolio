@@ -41,10 +41,7 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./my-portfolio
-        run: |
-          pwd
-          ls -la
-          cat package.json | grep -A 5 scripts
+        run: npm ci
 
       - name: Build
         working-directory: ./my-portfolio
